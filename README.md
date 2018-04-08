@@ -1,6 +1,6 @@
 #### 一些笔记
 
-[CNN基础]()
+[CNN基础](cnn/convolutional-networks.md)
 
 [物体检测的发展]()
 
