@@ -12,9 +12,9 @@
 
 > 回忆：普通的神经网络接受一个输入，然后通过层层隐藏层（hidden layers）计算。每个隐藏层由若干个神经元（neurons）组成，每个神经元与前一个隐藏层的所有神经元连接，同层的神经元之间没有任何连接，也不共享任何参数。最后的全连接层（fully-connected layer）叫做输出层，在分类任务中，输出层负责输出每一个类别的得分。
 
-普通神经网络没法拓展到处理图片。CIFAR-10数据集图片尺寸是32\*32\*3（宽=32，高=32，颜色通道=3），普通网络的第一个全连接层就需要有32\*32\*3=3072个参数。这个数字看起来可以接受，但稍大一些的图片，如200\*200\*3的图片就需要120000个参数，这还只是一个神经元，你肯定还想多要几个神经元，整个网络的参数数量会急剧膨胀！
+普通神经网络没法拓展到处理图片。CIFAR-10数据集图片尺寸是32x32x3（宽=32，高=32，颜色通道=3），普通网络的第一个全连接层就需要有32x32x3=3072个参数。这个数字看起来可以接受，但稍大一些的图片，如200x200x3的图片就需要120000个参数，这还只是一个神经元，你肯定还想多要几个神经元，整个网络的参数数量会急剧膨胀！
 
-卷积神经网络利用了输入由图片构成这一点对架构做了改善。和普通网络不用，ConvNet的神经元按照长(height)、宽(width)、深度(depth)三个维度组织。例如：CIFAR-10数据集的输入层的长度=32，宽度=32，深度=32。每一层的神经元都只会和前一层的一小块区域连接。处理CIFAR-10数据集的卷及网络的输出层维度会是1\*10\*10，因为最后一层我们会把原图缩成由类别得分构成的一个向量。
+卷积神经网络利用了输入由图片构成这一点对架构做了改善。和普通网络不用，ConvNet的神经元按照长(height)、宽(width)、深度(depth)三个维度组织。例如：CIFAR-10数据集的输入层的长度=32，宽度=32，深度=32。每一层的神经元都只会和前一层的一小块区域连接。处理CIFAR-10数据集的卷及网络的输出层维度会是1x10x10，因为最后一层我们会把原图缩成由类别得分构成的一个向量。
 
 ![普通3层神经网络](imgs/neural_net2.jpg)
 
@@ -26,19 +26,43 @@
 
 一个简单的、用来处理CIFAR-10数据集的卷积神经网络架构会是这样的：[INPUT -> CONV -> RELU -> POOL ->FC].
 
-INPUT [32\*32\*3] 是原始的图片，图片长宽分别为32，有三个颜色通道 R G B
+* INPUT [32x32x3] 是原始的图片，图片长宽分别为32，有三个颜色通道 R G B
 
-CONV 层会计算
+* 卷积层会计算那些连接着输入层局部区域的神经元的输出，每一个神经元节点计算一次权重（weights）和输出层局部区域的点乘。卷积层计算完以后，输出的大小可能是[32x32x12]（如果我们打算使用12个过滤器的话）。
 
-（CONV layer will compute the output of neurons that are connected to local regions in the input, each computing a dot product between their weights and a small region they are connected to in the input volume. This may result in volume such as [32x32x12] if we decided to use 12 filters.）
+* RELU 层会执行激活函数，它保持没有改变输入的形状，输入还是[32x32x12].
 
-RELU 层会执行激活函数，它保持没有改变输入的形状，输入还是[32\*32\*12].
+* 池化层会在沿着水平方向（width和height的方向）执行一次下采样操作，缩小volume的尺寸，输出的形状大概会是 [16x16x12]
 
-池化层会在沿着水平方向（width和height的方向）执行一次下采样操作，缩小volume的尺寸，输出的形状大概会是 [16\*16\*12]
+* FC layer（全连接层）会计算类别的得分，输出的形状会是[1x1x10]，向量中的每一个值是对应类别的得分（CIFAR-10数据集中的图片分属10个不同的类别）。全连接层的每一个神经元都会和前层的每一个神经元连接。
 
-FC layer（全连接层）会计算类别的得分，输出的形状会是[1\*1\*10]，向量中的每一个值是对应类别的得分（CIFAR-10数据集中的图片分属10个不同的类别）。全连接层的每一个神经元都会和前层的每一个神经元连接。
+按照这样的方法，卷积网络将原始图片逐层转化成最后的类别得分。有些层有可训练的参数，有些层没有。卷积层/全连接层就是有参数的（有weights和bias参数），RELU/POOL层就没有参数。卷积层和全连接层会使用梯度下降的方法训练，这样的话，在训练过程中我们整个卷积网络最后输出的类别得分就会向图片真实的类别靠近。
 
-In this way, ConvNets transform the original image layer by layer from the original pixel values to the final class scores. Note that some layers contain parameters and other don’t. In particular, the CONV/FC layers perform transformations that are a function of not only the activations in the input volume, but also of the parameters (the weights and biases of the neurons). On the other hand, the RELU/POOL layers will implement a fixed function. The parameters in the CONV/FC layers will be trained with gradient descent so that the class scores that the ConvNet computes are consistent with the labels in the training set for each image.
+总结：
 
+* 卷积神经网络一言以蔽之，就是通过层层网络结构，将一张图片计算成图片的类别得分。
 
+* 常见的几种Layer结构有 CONV(卷积层)/FC(全连接层)/RELU()/POOL(池化层)。
+
+* 每一层都接受一个3D的矩阵，结果计算，输出一个3D的矩阵，计算使用的函数是可微分。
+
+* 有些层有可训练的参数，有些层没有
+
+* 有些层有超参数(CONV/FC/POOL)，有些层没有(RELU)
+
+![卷积神经网络图示](imgs/convnet.jpg)
+
+#### 卷积层
+
+卷积层是卷及网络中的核心部件，大部分繁重的计算都是由卷积层计算的。
+
+首先我们在不谈论人脑/神经的基础上理解一下卷积层干了什么事情。每个卷积层都由若干个过滤器(filters)构成，过滤器中包含了可学习的参数。每个过滤器都是一个小方块，他们沿着输入矩阵的长宽方面覆盖了整个input volume。举个例子，通常第一层的卷积层会使用5x5x3大小的filter（5x5是filter的长度和宽度，3是深度，深度和输入图像的颜色通道数量是一致的）。在前向传播的过程中，我们不断把这个filter沿着输入矩阵的长、宽方向滑动，没滑动一个位置，filter就和对应位置的输入区域做点乘(dot product)。这个滑动、计算的过程最终会产生一个2维的激活图。直观来说，网络学到的filter会在看到一些特殊的形状时被激活（例如某些边缘、特殊色块、旋转），也可能被一些蜂窝状或原型的形状激活。现在我们有了一组filter，每个filter都能产生一个激活图。我们把这些激活图沿着depth方向叠在一起，产生这层卷积的输出。
+
+我们再一次用人脑/神经相关的视角看一下卷积层，当处理图片这种高维度的信息时，使用一个神经元去“看”每一个图片的像素是不合理的。我们只把一个神经元和输入图片的一小片区域连接，这小片区域的大小是一个超参数，我们又把他叫做神经元的感受野。
+
+> 例1. 加入输入图片的尺寸是[32x32x3]（就是CIFAR-10图片的尺寸）。假如感受野的尺寸（更普遍的叫法是filter size）是5*5，卷积层的每一个神经元都会有一个指向原始图片相应的[5x5x3]区域的一个连接。
+
+> 例2. 加入输入的尺寸是[16x16x20]（我们已经不能把它称为图片了）。我们使用的感受野大小为3x3，卷积层中每一个神经元都会有 3x3x20=180个参数。连接在沿着width、height这个方向是局部的，但在depth方向的全连接。
+//Left: An example input volume in red (e.g. a 32x32x3 CIFAR-10 image), and an example volume of neurons in the first Convolutional layer.
+![红色是输入图片，32x32x3，蓝色是第一个卷积层上的一组神经元](imgs/depthcol.jpg)
 
