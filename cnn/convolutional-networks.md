@@ -2,12 +2,12 @@
 
 > 翻译自[斯坦福大学的cs231n课程](http://cs231n.github.io/convolutional-networks/)
 
-[卷积神经网络(CNNs/ConvNets)](#卷积神经网络(cnns/convnets))
+[卷积神经网络(CNNs/ConvNets)](#卷积神经网络cnnsconvnets)
 - [架构总览](#架构总览)
-- [搭建卷积网络的层(Layers)](#搭建卷积网络的层(layers))
-- [卷积层](#搭建卷积网络的层(layers))
-- [池化层（Pooling Layer）](#池化层（pooling-layer）)
-- [正规化层（Normalization Layer）](#正规化层（normalization-layer）)
+- [搭建卷积网络的层(Layers)](#搭建卷积网络的层layers)
+- [卷积层](#卷积层)
+- [池化层（Pooling Layer）](#池化层pooling-layer)
+- [正规化层（Normalization Layer）](#正规化层normalization-layer)
 - [全连接层](#全连接层)
 - [将全连接层转化为卷积层](#将全连接层转化为卷积层)
 
@@ -32,7 +32,7 @@
 
 ![卷积神经网络，神经元由三个维度构成，每一层都接受一个三维的输入，返回一个三维的输出，图中：红色的输入层表示原始图片](imgs/cnn.jpg)
 
-#### 搭建卷积网络的层(Layers)
+#### 搭建卷积网络的层（Layers）
 
 卷积神经网络由层构成，每一层都将一个三维激活值矩阵通过一个可微函数转化成另一个矩阵。我们主要使用三种类型的层：卷积层（Convolutional Layer），池化层（Pooling Layer），和全连接层（Fully-Connected Layer）。我们就用这三种层堆叠出整个卷积网络的架构。
 
@@ -48,7 +48,7 @@
 
 * FC layer（全连接层）会计算类别的得分，输出的形状会是[1x1x10]，向量中的每一个值是对应类别的得分（CIFAR-10数据集中的图片分属10个不同的类别）。全连接层的每一个神经元都会和前层的每一个神经元连接。
 
-按照这样的方法，卷积网络将原始图片逐层转化成最后的类别得分。有些层有可训练的参数，有些层没有。卷积层/全连接层就是有参数的（有weights和bias参数），RELU/POOL层就没有参数。卷积层和全连接层会使用梯度下降的方法训练，这样的话，在训练过程中我们整个卷积网络最后输出的类别得分就会向图片真实的类别靠近。
+按照这样的方法，卷积网络将原始图片逐层转化成最后的类别得分。有些层有可训练的参数，有些层没有。卷积层/全连接层就是有参数的（有weights和bias参数），RELU/Pooling层就没有参数。卷积层和全连接层会使用梯度下降的方法训练，这样的话，在训练过程中我们整个卷积网络最后输出的类别得分就会向图片真实的类别靠近。
 
 总结：
 
@@ -92,7 +92,19 @@
 
 #### 池化层（Pooling Layer）
 
+在连续的卷积层之间我们一般会插入Pooling层。Pooling层的作用是减小feature map的长和宽，减少了整个网络的参数数量和计算量，从而控制了过拟合。Pooling层在depth这个维度上是独立的。具体Pooling层的操作可以见下图
+
+![Pooling层对depth维度的每一张输入进行下采样操作](imgs/pool.jpg)
+
+![Max Pooling的计算细节](imgs/maxpool.jpg)
+
+实践中只有两种常见的Max Pooling层：F=3, S=2（叫做重叠池化层），更常见的是 F=2,S=2。更大感受野的Pooling层不太常见，因为破坏性太强了。
+
+还有一种Pooling叫做General pooling。和Max Pooling不一样的是，它不光可以在感受野内做Max()操作，还能做取平均值操作，average pooling计算的就是感受野内激活点的l2-norm。但是average pooling最近不太流行，被max pooling慢慢取代了，因为实践过程中max pooling工作得更好。
+
 #### 正规化层（Normalization Layer）
+
+Normalization Layer现在也不流行了，因为实践证明它们没什么作用。
 
 #### 全连接层
 
@@ -104,7 +116,7 @@
 
 #### Layer Patterns
 
-最常见的卷积层架构是把若干个 CONV + RELU 层堆叠在一起，紧接着再加一个POOL层，重复这个模式直到层层计算后输入图片在尺度上越来越小，尺度小到一定程度，也可以替换成全连接+RELU层。最后的全连接层复杂整个网络的输出，例如输出图片的类别得分。最常见的卷积网络模式如下
+最常见的卷积层架构是把若干个 CONV + RELU 层堆叠在一起，紧接着再加一个Pooling层，重复这个模式直到层层计算后输入图片在尺度上越来越小，尺度小到一定程度，也可以替换成全连接+RELU层。最后的全连接层复杂整个网络的输出，例如输出图片的类别得分。最常见的卷积网络模式如下
 
 `INPUT -> [[CONV -> RELU]*N -> POOL?]*M -> [FC -> RELU]*K -> FC`
 
