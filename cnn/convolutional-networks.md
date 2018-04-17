@@ -2,6 +2,18 @@
 
 > 翻译自[斯坦福大学的cs231n课程](http://cs231n.github.io/convolutional-networks/)
 
+[卷积神经网络(CNNs/ConvNets)](#卷积神经网络(cnns/convnets))
+- [架构总览](#架构总览)
+- [搭建卷积网络的层(Layers)](#搭建卷积网络的层(layers))
+- [卷积层](#搭建卷积网络的层(layers))
+- [池化层（Pooling Layer）](#池化层（pooling-layer）)
+- [正规化层（Normalization Layer）](#正规化层（normalization-layer）)
+- [全连接层](#全连接层)
+- [将全连接层转化为卷积层](#将全连接层转化为卷积层)
+
+[卷积网络的架构](#卷积网络的架构)
+- [Layer Patterns](#layer-patterns)
+
 ### 卷积神经网络(CNNs/ConvNets)
 
 卷积神经网络的普通的神经网络有很多相似之处：他们都由神经元组成，这些神经元都有可学习的weights和biases。每个神经元接受一个输入，进行一次点乘运算（dot product），紧接着一次非线性的运算（也可能没有）。整个网络表达的是一个可微分的评价函数：输入的是图片的像素值，得到一个判断图片类别的评分。网络最后的全连接层也会有一个损失函数（SVM/Softmax）。
